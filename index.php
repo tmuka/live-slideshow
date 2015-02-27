@@ -7,12 +7,12 @@
 	* { box-sizing: border-box; }
 	body { margin:0; padding:0; color: black; background: yellow; }
 	img { max-width: 100%; height: 100%; margin:0 auto; }
-    #sidebar { width: 480px;  padding: 1em 50px; box-sizing:border-box; font-family: sans-serif; text-align: center; position:absolute; right:0; top:0; height: 100%; }
+    #sidebar { width: 25%;  padding: 1em 50px; box-sizing:border-box; font-family: sans-serif; text-align: center; position:absolute; right:0; top:0; height: 100%; }
 	#sidebar h1 { font-weight: 700; font-size: 120px; line-height: 1.5em; }
-	#sidebar #footer { position:absolute; font-size: 40px; bottom: 40%; width: 100%; right: 0; text-align:center; }
+	#sidebar #footer { font-size: 40px; width: 100%; right: 0; text-align:center; }
 	/* pager */
 	.cycle-pager { 
-		display: block; z-index: 99999; width: 100%; z-index: 500; position: absolute; bottom: 10px; right:10px; width: 460px; overflow: hidden;
+		display: block; z-index: 99999; width: 100%; z-index: 500; position: absolute; bottom: 10px; right:10px; width: 25%; overflow: hidden;
 	}
 	.cycle-pager span { 
 	    font-family: arial; font-size: 50px; width: 16px; height: 16px; 

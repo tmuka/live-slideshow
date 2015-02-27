@@ -1,6 +1,10 @@
 <?php 
 
-$dir = 'img/';
-$images = glob($dir.'*.{jpg,JPG,png,PNG,gif,GIF}',GLOB_BRACE);
+if(isset($_REQUEST['promos'])){
+	$dir = 'img/promos/';
+} else {
+	$dir = 'img/';
+}
+$images = glob($dir.'*.{png,PNG,jpg,JPG,gif,GIF}',GLOB_BRACE);
 //shuffle($images);
 echo implode(",", $images);

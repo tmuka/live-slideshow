@@ -7,20 +7,23 @@
 	* { box-sizing: border-box; }
 	body { margin:0; padding:0; color: black; background: yellow; }
 	img { max-width: 100%; height: 100%; margin:0 auto; }
-    #sidebar { width: 25%;  padding: 1em 50px; box-sizing:border-box; font-family: "HelveticaNeue-CondensedBold", Helvetica, sans-serif; text-align: center; position:absolute; right:0; top:0; height: 100%; font-stretch: ultra-condensed; }
-	#sidebar h1 { font-weight: 700; font-size: 160px; line-height: 1em; }
-	#sidebar #footer { font-size: 40px; width: 100%; right: 0; text-align:center; }
+    #sidebar { width: 25%;  padding: 1em 50px; box-sizing:border-box; font-family: "HelveticaNeue-CondensedBold", Helvetica, sans-serif; text-align: center; position:absolute; right:0; top:0; height: 100%; font-stretch: ultra-condensed;  }
+	#sidebar h1 { font-weight: 700; font-size: 160px; line-height: 1em; z-index:99999; position:relative;}
+	#sidebar #footer { font-size: 40px; width: 100%; right: 0; text-align:center; z-index:99999; position:relative;}
 	/* pager */
 	.cycle-pager { 
-		display: block; z-index: 99999; width: 100%; z-index: 500; position: absolute; bottom: 10px; right:10px; width: 25%; overflow: hidden;
+		display: block; z-index: 89999; width: 100%; z-index: 500; position: absolute; bottom: 10px; right:10px; width: 25%; overflow: hidden;
 	}
 	.cycle-pager span { 
-	    font-family: arial; font-size: 50px; width: 16px; height: 16px; 
-		display: block; float:right; color: #ddd; cursor: pointer; 
+	    font-family: arial; font-size: 50px; width: 18%; height: 16px; 
+		display: block; float:right; color: #333; cursor: pointer; 
 		     background-color: #333;
-			border-radius: 8px;
-			margin: 0 2px 2px 0;
-			opacity: 0.5;
+			border-radius: 4px;
+			margin: 0 1% 1% 0;
+			text-indent: 100%;
+			overflow: hidden;
+			white-space: nowrap;
+			opacity: 0.3;
 	}
 	.cycle-pager span.cycle-pager-active {background-color: red; color: #D69746;}
 	.cycle-pager > * { cursor: pointer;}
@@ -67,6 +70,7 @@
 		data-cycle-pause-on-hover="true"
 		data-cycle-random="true"
 		data-cycle-reverse="true"
+		disabled-data-cycle-loader="true"
     >
     <div class="cycle-pager"></div>
 </div>
@@ -77,10 +81,12 @@
 jQuery('document').ready(function($){
 		var images = [];
 		var slides_shown = 0;
+		var promo_count = 0;
 		
 
-		function add_images() {
-			$.get('/images.php', function(data){
+		function add_images(img_list_url) {
+			img_list_url = img_list_url || '/images.php';
+			$.get(img_list_url, function(data){
 				all_images = data.split(',');
 				var new_images = $(all_images).not(images).get();	
 				//console.log("all images, old list, diff ")
@@ -101,16 +107,28 @@ jQuery('document').ready(function($){
 					//extra delay after adding new photos, except for the first time.
 					if(slides_shown > 1){
 						$('.cycle-slideshow').cycle('pause');
-						timeoutID = window.setTimeout(resume_show, 20000); // this is the extra time delay a newly added photo is displayed
+						timeoutID = window.setTimeout(resume_show, 10000); // this is the extra time delay a newly added photo is displayed
+					} else {
+						promo_count = images.length;
 					}
+
 				}
 			});
 		}
 		function resume_show(){
 			$('.cycle-slideshow').cycle('resume') //delay for 10,000 miliseconds before resuming
 		}
+		function show_promo(){
+			var promo_num = getRandomInt(0, promo_count);	
+			console.log('showing promo #'+promo_num +' of ' + promo_count);
+			$('.cycle-slideshow').cycle('goto', promo_num);
+		}
+		add_images('/images.php?promos=true');
+		console.log('promo_count = ' + promo_count);
 		add_images();
 		setInterval(function(){ add_images() }, 5000);
+
+		setInterval(function(){ show_promo() }, 20000); //show promo every 20000 miliseconds
 
 
 		$('.cycle-slideshow').on('cycle-after', function(event, optionHash, outgoingSlideEl, incomingSlideEl, forwardFlag){
@@ -119,17 +137,24 @@ jQuery('document').ready(function($){
 			if($('.cycle-slideshow').hasClass('resetAfter').length > 0){
 				console.log('resetting slideshow after showing new image');
 				$('.cycle-slideshow').removeClass('resetAfter');
-				$('.cycle-slideshow').cycle('reinit');
+				//$('.cycle-slideshow').cycle('reinit');
 			}
+			//console.log('curslide= '+  outgoingSlideEl.src);
 		})
 
-
+			/**
+			 *  * Returns a random integer between min and max
+			 *   * Using Math.round() will give you a non-uniform distribution!
+			 *    */
+			function getRandomInt (min, max) {
+				return Math.floor(Math.random() * (max - min + 1)) + min;
+			}
 	
 	});
 </script>
 
 <div style="" id="sidebar">
-<h1>RAISE YOUR VOICE</h1>
+<h1>RAISE YOUR VOICE!</h1>
 <div id="footer">ryv-rbc.com</div>
 </div>
 

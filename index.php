@@ -1,8 +1,124 @@
+<?php 
+	/************** SETTINGS ***********************/
+	$num_photos_between_promos = 3;
+	$seconds_per_slide = 2;
+
+?>
 <html>
 <head>
 <script src="/jquery.min.js"></script>
 <script src="/jquery.cycle2.min.js"></script>
 <script src="/jquery.cycle2.scrollVert.min.js"></script>
+<!-- script to add more images at a later time -->
+<script>
+jQuery('document').ready(function($){
+		var images = [];
+		var slides_shown = 0;
+		var promo_count = 0;
+		var next_slide = 0;
+		var slides_since_promo = 1;		
+		var add_image_running = 0;
+
+		function resume_show(){
+			$('.cycle-slideshow').cycle('resume') //delay for 10,000 miliseconds before resuming
+		}
+
+		/**
+		 *  * Returns a random integer between min and max
+		 *   * Using Math.round() will give you a non-uniform distribution!
+		 *    */
+		 function getRandomInt (min, max) {
+		 	return Math.floor(Math.random() * (max - min + 1)) + min;
+		 }
+
+		 function add_images(img_list_url, callback) {
+		 	//if(add_image_running) return;
+		 	add_image_running = 1;
+			img_list_url = img_list_url || '/images.php';
+			$.get(img_list_url, function(data){
+				all_images = data.split(',');
+				var new_images = $(all_images).not(images).get();	
+				//console.log("all images, old list, diff ")
+				console.log(all_images);
+				console.log(images);
+				console.log(new_images);
+				if(new_images.length > 0){
+					images = all_images;
+					for (var i=0; i < new_images.length; i++) {
+						console.log('Adding ' + new_images[i] + ' to slideshow;');
+						$('.cycle-slideshow').cycle('add', '<img src="' + new_images[i] +'"/>' );
+					}
+					$(this).prop('disabled', true)
+
+
+					//extra delay after adding new photos, except for the first time.
+					if(slides_shown > 1){
+						console.log(images);
+						//console.log('going to slide'+ images.length -1);
+						$('.cycle-slideshow').cycle('goto', images.length-1); //show new slide
+
+						console.log('pausing for 10s since a new photo was added');
+						$('.cycle-slideshow').cycle('pause');
+						timeoutID = window.setTimeout(resume_show, 10000); // this is the extra time delay a newly added photo is displayed
+					} 
+					if(img_list_url.search('promo') > 0){
+						promo_count = images.length;
+						console.log('promo_count = ' + promo_count);
+
+					}
+
+				}
+			});
+			add_image_running = 0;
+		} //end add_images fn
+
+
+		//setInterval(function(){ add_images() }, 5000);
+		//setInterval(function(){ show_promo() }, 20000); //show promo every 20000 miliseconds
+
+
+		$('.cycle-slideshow').on('cycle-after', function(event, optionHash, outgoingSlideEl, incomingSlideEl, forwardFlag){
+			slides_shown +=1;
+			add_images();
+
+		})
+
+		/*
+		$(document).on( 'cycle-bootstrap', function( e, optionHash, API ) {
+			console.log('setting up our custom bootstrap');
+		    // replace "advanceSlide" method with custom impl
+		    API.advanceSlide = function( numberOfPositions ) {
+		    		console.log('advancing slide');
+		    	    var opts = this.opts();
+			        clearTimeout(opts.timeoutId);
+			        opts.timeoutId = 0;
+					console.log('slides_since_promo = ' + slides_since_promo);
+					if(slides_since_promo > <?php echo $num_photos_between_promos; ?>){
+						promo_num = getRandomInt(0, promo_count-1);	
+						opts.nextSlide = promo_num;
+						console.log('showing promo index #'+promo_num +' of ' + promo_count +' next.');
+						slides_since_promo = 0;
+					} else {
+				        opts.nextSlide = opts.currSlide + val;
+				        slides_since_promo += 1;
+					}
+
+			        if (opts.nextSlide < 0)
+			            opts.nextSlide = opts.slides.length - 1;
+			        else if (opts.nextSlide >= opts.slides.length)
+			            opts.nextSlide = 0;
+
+			        opts.API.prepareTx( true,  val >= 0 );
+			        return false;
+			    }
+
+			})
+		*/
+			    //$('.cycle-slideshow').cycle();
+			    add_images('/images.php?promos=true',add_images());
+	
+	});
+</script>
 <style>
 	* { box-sizing: border-box; }
 	body { margin:0; padding:0; color: black; background: yellow; }
@@ -63,95 +179,20 @@
  * and setInterval 5000 means 5 seconds between filesystem refreshes
  ******************************************************************************/ 
 ?>
-<div class="cycle-slideshow" style="max-width: 100%; max-height: 100%;"
+<div id="slideshow" class="cycle-slideshow" style="max-width: 100%; max-height: 100%;"
         data-cycle-fx="scrollVert" 
-	   	data-cycle-timeout="2000"
+	   	data-cycle-timeout="<?php echo ($seconds_per_slide*1000); ?>"
 		data-cycle-pager-event="mouseover"
 		data-cycle-pause-on-hover="true"
-		data-cycle-random="true"
+		disable-data-cycle-random="true"
 		data-cycle-reverse="true"
-		disabled-data-cycle-loader="true"
+		data-cycle-log="true"
+		disable-data-cycle-loader="true"
     >
     <div class="cycle-pager"></div>
 </div>
 
 
-<!-- script to add more images at a later time -->
-<script>
-jQuery('document').ready(function($){
-		var images = [];
-		var slides_shown = 0;
-		var promo_count = 0;
-		
-
-		function add_images(img_list_url) {
-			img_list_url = img_list_url || '/images.php';
-			$.get(img_list_url, function(data){
-				all_images = data.split(',');
-				var new_images = $(all_images).not(images).get();	
-				//console.log("all images, old list, diff ")
-				//console.log(new_images);
-				//console.log(images);
-				//console.log(all_images);
-				if(new_images.length > 0){
-					images = all_images;
-					for (var i=0; i < new_images.length; i++) {
-						console.log('Adding ' + new_images[i] + ' to slideshow;');
-						$('.cycle-slideshow').cycle('add', '<img src="' + new_images[i] +'"/>' );
-					}
-					$(this).prop('disabled', true)
-
-					//console.log('going to slide'+ images.length -1);
-					$('.cycle-slideshow').cycle('goto', images.length-1).addClass('resetAfter');  //instead of doing a reinit here, we set this flag that tells us to do it when the current new slide is done showing.
-
-					//extra delay after adding new photos, except for the first time.
-					if(slides_shown > 1){
-						$('.cycle-slideshow').cycle('pause');
-						timeoutID = window.setTimeout(resume_show, 10000); // this is the extra time delay a newly added photo is displayed
-					} else {
-						promo_count = images.length;
-					}
-
-				}
-			});
-		}
-		function resume_show(){
-			$('.cycle-slideshow').cycle('resume') //delay for 10,000 miliseconds before resuming
-		}
-		function show_promo(){
-			var promo_num = getRandomInt(0, promo_count);	
-			console.log('showing promo #'+promo_num +' of ' + promo_count);
-			$('.cycle-slideshow').cycle('goto', promo_num);
-		}
-		add_images('/images.php?promos=true');
-		console.log('promo_count = ' + promo_count);
-		add_images();
-		setInterval(function(){ add_images() }, 5000);
-
-		setInterval(function(){ show_promo() }, 20000); //show promo every 20000 miliseconds
-
-
-		$('.cycle-slideshow').on('cycle-after', function(event, optionHash, outgoingSlideEl, incomingSlideEl, forwardFlag){
-			//console.log('called cycle-after before loading: '+incomingSlideEl.src);
-			slides_shown += 1;
-			if($('.cycle-slideshow').hasClass('resetAfter').length > 0){
-				console.log('resetting slideshow after showing new image');
-				$('.cycle-slideshow').removeClass('resetAfter');
-				//$('.cycle-slideshow').cycle('reinit');
-			}
-			//console.log('curslide= '+  outgoingSlideEl.src);
-		})
-
-			/**
-			 *  * Returns a random integer between min and max
-			 *   * Using Math.round() will give you a non-uniform distribution!
-			 *    */
-			function getRandomInt (min, max) {
-				return Math.floor(Math.random() * (max - min + 1)) + min;
-			}
-	
-	});
-</script>
 
 <div style="" id="sidebar">
 <h1>RAISE YOUR VOICE!</h1>

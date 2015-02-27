@@ -7,8 +7,8 @@
 	* { box-sizing: border-box; }
 	body { margin:0; padding:0; color: black; background: yellow; }
 	img { max-width: 100%; height: 100%; margin:0 auto; }
-    #sidebar { width: 25%;  padding: 1em 50px; box-sizing:border-box; font-family: sans-serif; text-align: center; position:absolute; right:0; top:0; height: 100%; }
-	#sidebar h1 { font-weight: 700; font-size: 120px; line-height: 1.5em; }
+    #sidebar { width: 25%;  padding: 1em 50px; box-sizing:border-box; font-family: "HelveticaNeue-CondensedBold", Helvetica, sans-serif; text-align: center; position:absolute; right:0; top:0; height: 100%; font-stretch: ultra-condensed; }
+	#sidebar h1 { font-weight: 700; font-size: 160px; line-height: 1em; }
 	#sidebar #footer { font-size: 40px; width: 100%; right: 0; text-align:center; }
 	/* pager */
 	.cycle-pager { 
@@ -45,6 +45,9 @@
 	    border-radius: 10px;
 	    opacity: .5; filter: alpha(opacity=50);
 	}
+	@media screen and (min-width : 3400px) and (device-aspect-ratio: 16/9){
+		#sidebar h1 { font-size:320px; line-height: 1.5em; }
+	}
 
 </style>
 </head>
@@ -59,9 +62,9 @@
 ?>
 <div class="cycle-slideshow" style="max-width: 100%; max-height: 100%;"
         data-cycle-fx="scrollVert" 
-        data-cycle-timeout="2000"
+	   	data-cycle-timeout="2000"
 		data-cycle-pager-event="mouseover"
-		disable-data-cycle-pause-on-hover="true"
+		data-cycle-pause-on-hover="true"
 		data-cycle-random="true"
 		data-cycle-reverse="true"
     >
@@ -73,6 +76,7 @@
 <script>
 jQuery('document').ready(function($){
 		var images = [];
+		var slides_shown = 0;
 		
 
 		function add_images() {
@@ -92,10 +96,17 @@ jQuery('document').ready(function($){
 					$(this).prop('disabled', true)
 
 					//console.log('going to slide'+ images.length -1);
-					$('.cycle-slideshow').cycle('goto', images.length-1);
-					$('.cycle-slideshow').addClass('resetAfter');  //instead of doing a reinit here, we set this flag that tells us to do it when the current new slide is done showing.
+					$('.cycle-slideshow').cycle('goto', images.length-1).addClass('resetAfter');  //instead of doing a reinit here, we set this flag that tells us to do it when the current new slide is done showing.
+
+					if(slides_shown > 1){
+						$('.cycle-slideshow').cycle('pause');
+						timeoutID = window.setTimeout(resume_show, 20000); // this is the extra time delay a newly added photo is displayed
+					}
 				}
 			});
+		}
+		function resume_show(){
+			$('.cycle-slideshow').cycle('resume') //delay for 10,000 miliseconds before resuming
 		}
 		add_images();
 		setInterval(function(){ add_images() }, 5000);
@@ -103,6 +114,7 @@ jQuery('document').ready(function($){
 
 		$('.cycle-slideshow').on('cycle-after', function(event, optionHash, outgoingSlideEl, incomingSlideEl, forwardFlag){
 			//console.log('called cycle-after before loading: '+incomingSlideEl.src);
+			slides_shown += 1;
 			if($('.cycle-slideshow').hasClass('resetAfter').length > 0){
 				console.log('resetting slideshow after showing new image');
 				$('.cycle-slideshow').removeClass('resetAfter');
@@ -116,8 +128,8 @@ jQuery('document').ready(function($){
 </script>
 
 <div style="" id="sidebar">
-<h1>Raise Your Voice</h1>
-<div id="footer">http://ryv-rbc.com</div>
+<h1>RAISE YOUR VOICE</h1>
+<div id="footer">ryv-rbc.com</div>
 </div>
 
 </body>

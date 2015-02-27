@@ -71,18 +71,6 @@
 
 <!-- script to add more images at a later time -->
 <script>
- /*
-    * Shuffle jQuery array of elements - see Fisher-Yates algorithm
-    */
-    jQuery.fn.shuffle = function () {
-        var j;
-        for (var i = 0; i < this.length; i++) {
-            j = Math.floor(Math.random() * this.length);
-            $(this[i]).before($(this[j]));
-        }
-        return this;
-    };
-
 jQuery('document').ready(function($){
 		var images = [];
 		
@@ -105,11 +93,7 @@ jQuery('document').ready(function($){
 
 					//console.log('going to slide'+ images.length -1);
 					$('.cycle-slideshow').cycle('goto', images.length-1);
-					
-					//$('.cycle-slideshow img').sort( function(){ return ( Math.round( Math.random() ) - 0.5 ) } );
 					$('.cycle-slideshow').addClass('resetAfter');  //instead of doing a reinit here, we set this flag that tells us to do it when the current new slide is done showing.
-
-					
 				}
 			});
 		}
@@ -121,7 +105,6 @@ jQuery('document').ready(function($){
 			//console.log('called cycle-after before loading: '+incomingSlideEl.src);
 			if($('.cycle-slideshow').hasClass('resetAfter').length > 0){
 				console.log('resetting slideshow after showing new image');
-				$('.cycle-slideshow img').shuffle();
 				$('.cycle-slideshow').removeClass('resetAfter');
 				$('.cycle-slideshow').cycle('reinit');
 			}

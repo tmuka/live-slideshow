@@ -32,18 +32,18 @@ jQuery('document').ready(function($){
 		 }
 
 		 function add_images(img_list_url, callback) {
-		 	//if(add_image_running) return;
+		 	if(add_image_running) return;
 		 	add_image_running = 1;
 			img_list_url = img_list_url || '/images.php';
 			$.get(img_list_url, function(data){
 				all_images = data.split(',');
 				var new_images = $(all_images).not(images).get();	
 				//console.log("all images, old list, diff ")
-				console.log(all_images);
-				console.log(images);
-				console.log(new_images);
+				//console.log(all_images);
+				//console.log(images);
+				//console.log(new_images);
 				if(new_images.length > 0){
-					images = all_images;
+					images = images.concat(new_images);
 					for (var i=0; i < new_images.length; i++) {
 						console.log('Adding ' + new_images[i] + ' to slideshow;');
 						$('.cycle-slideshow').cycle('add', '<img src="' + new_images[i] +'"/>' );
@@ -53,7 +53,7 @@ jQuery('document').ready(function($){
 
 					//extra delay after adding new photos, except for the first time.
 					if(slides_shown > 1){
-						console.log(images);
+						//console.log(images);
 						//console.log('going to slide'+ images.length -1);
 						$('.cycle-slideshow').cycle('goto', images.length-1); //show new slide
 
@@ -62,7 +62,7 @@ jQuery('document').ready(function($){
 						timeoutID = window.setTimeout(resume_show, 10000); // this is the extra time delay a newly added photo is displayed
 					} 
 					if(img_list_url.search('promo') > 0){
-						promo_count = images.length;
+						promo_count = new_images.length;
 						console.log('promo_count = ' + promo_count);
 
 					}
@@ -77,9 +77,24 @@ jQuery('document').ready(function($){
 		//setInterval(function(){ show_promo() }, 20000); //show promo every 20000 miliseconds
 
 
-		$('.cycle-slideshow').on('cycle-after', function(event, optionHash, outgoingSlideEl, incomingSlideEl, forwardFlag){
+		$('.cycle-slideshow').on('cycle-before', function(event, optionHash, outgoingSlideEl, incomingSlideEl, forwardFlag){
 			slides_shown +=1;
 			add_images();
+			console.log('this slide= '+  optionHash.currSlide +'; slides_since_promo = ' + slides_since_promo + '; next_slide = '+next_slide);
+			if(slides_since_promo == 0) {
+		        slides_since_promo += 1;
+				$('.cycle-slideshow').cycle('goto', next_slide+1); //show new slide
+			} else if(slides_since_promo > <?php echo $num_photos_between_promos; ?>){
+				next_slide = optionHash.currSlide;
+				promo_num = getRandomInt(0, promo_count-1);	
+				//opts.nextSlide = promo_num;
+				console.log('showing promo index #'+promo_num +' of ' + promo_count +' next.');
+				slides_since_promo = 0;
+				$('.cycle-slideshow').cycle('goto', promo_num); //show new slide
+			} else {
+		        //opts.nextSlide = opts.currSlide + val;
+		        slides_since_promo += 1;
+			}
 
 		})
 
@@ -114,28 +129,29 @@ jQuery('document').ready(function($){
 
 			})
 		*/
-			    //$('.cycle-slideshow').cycle();
-			    add_images('/images.php?promos=true',add_images());
+			   
+		//$('.cycle-slideshow').cycle();
+		add_images('/images.php?promos=true', add_images());  //this is the initial load of images, with a callback to make it synchronous
 	
 	});
 </script>
 <style>
 	* { box-sizing: border-box; }
 	body { margin:0; padding:0; color: black; background: yellow; }
-	img { max-width: 100%; height: 100%; margin:0 auto; }
+	img { max-width: 100%; height: 100%; margin:0; }
     #sidebar { width: 25%;  padding: 1em 50px; box-sizing:border-box; font-family: "HelveticaNeue-CondensedBold", Helvetica, sans-serif; text-align: center; position:absolute; right:0; top:0; height: 100%; font-stretch: ultra-condensed;  }
 	#sidebar h1 { font-weight: 700; font-size: 160px; line-height: 1em; z-index:99999; position:relative;}
 	#sidebar #footer { font-size: 40px; width: 100%; right: 0; text-align:center; z-index:99999; position:relative;}
 	/* pager */
 	.cycle-pager { 
-		display: block; z-index: 89999; width: 100%; z-index: 500; position: absolute; bottom: 10px; right:10px; width: 25%; overflow: hidden;
+		display: block; z-index: 89999; z-index: 500; position: absolute; bottom: 0px; right:0px; width: 24%; overflow: hidden;
 	}
 	.cycle-pager span { 
-	    font-family: arial; font-size: 50px; width: 18%; height: 16px; 
-		display: block; float:right; color: #333; cursor: pointer; 
+	    font-family: arial; font-size: 50px; width: 19%; height: 16px; 
+		display: block; float:left; color: #333; cursor: pointer; 
 		     background-color: #333;
 			border-radius: 4px;
-			margin: 0 1% 1% 0;
+			margin: 0 0 1% 1%;
 			text-indent: 100%;
 			overflow: hidden;
 			white-space: nowrap;
@@ -185,7 +201,7 @@ jQuery('document').ready(function($){
 		data-cycle-pager-event="mouseover"
 		data-cycle-pause-on-hover="true"
 		disable-data-cycle-random="true"
-		data-cycle-reverse="true"
+		data-cycle-reverse="false"
 		data-cycle-log="true"
 		disable-data-cycle-loader="true"
     >

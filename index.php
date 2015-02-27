@@ -98,6 +98,7 @@ jQuery('document').ready(function($){
 					//console.log('going to slide'+ images.length -1);
 					$('.cycle-slideshow').cycle('goto', images.length-1).addClass('resetAfter');  //instead of doing a reinit here, we set this flag that tells us to do it when the current new slide is done showing.
 
+					//extra delay after adding new photos, except for the first time.
 					if(slides_shown > 1){
 						$('.cycle-slideshow').cycle('pause');
 						timeoutID = window.setTimeout(resume_show, 20000); // this is the extra time delay a newly added photo is displayed

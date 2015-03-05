@@ -109,13 +109,13 @@ jQuery('document').ready(function($){
 		})
 		
 		$(document).on('cycle-before', function(event, optionHash, outgoingSlideEl, incomingSlideEl, forwardFlag){
-		
+			console.log(slides_shown +'. this slide= '+  optionHash.currSlide +'; slides_since_promo = ' + slides_since_promo + '; resume_slide_num = '+resume_slide_num +' '+forwardFlag);
 		})
 		$(document).on('cycle-after', function(event, optionHash, outgoingSlideEl, incomingSlideEl, forwardFlag){
 
 			//console.log(incomingSlideEl);
 			//console.log(forwardFlag);
-			console.log(slides_shown +'. this slide= '+  optionHash.currSlide +'; slides_since_promo = ' + slides_since_promo + '; resume_slide_num = '+resume_slide_num +' '+forwardFlag);
+			
 			
 			if(!forwardFlag){
 				slides_since_promo = 0;
@@ -191,6 +191,14 @@ jQuery('document').ready(function($){
 		$('#slideshow').addClass('cycle-slideshow').cycle().animate({}, function(){
 				add_images('/images.php?promos=true', add_images);  //this is the initial load of images, with a callback to make it synchronous
 		});
+
+		$('h1').click(function(){
+			if($('.cycle-paused').length){
+				$('.cycle-slideshow').cycle('resume');
+			} else {
+				$('.cycle-slideshow').cycle('pause');
+			}
+		})
 	});
 </script>
 <style>

@@ -1,7 +1,7 @@
 <?php 
 	/************** SETTINGS ***********************/
-	$num_photos_between_promos = 3;
-	$seconds_per_slide = 2;
+	$num_photos_between_promos = 2;
+	$seconds_per_slide = 3;
 
 ?>
 <html>
@@ -15,7 +15,7 @@ jQuery('document').ready(function($){
 		var images = [];
 		var slides_shown = 0;
 		var promo_count = 0;
-		var next_slide = 0;
+		var resume_slide_num = 0;
 		var slides_since_promo = 1;		
 		var add_image_running = 0;
 
@@ -29,7 +29,7 @@ jQuery('document').ready(function($){
 		 *   * Using Math.round() will give you a non-uniform distribution!
 		 *    */
 		 function getRandomInt (min, max) {
-		 	return Math.floor(Math.random() * (max - min + 1)) + min;
+		 	return parseInt(Math.floor(Math.random() * (max - min + 1)) + min);
 		 }
 
 		 function add_images(img_list_url, callback) {
@@ -46,10 +46,11 @@ jQuery('document').ready(function($){
 				if(new_images.length > 0){
 					images = images.concat(new_images);
 					for (var i=0; i < new_images.length; i++) {
-						console.log('Adding ' + new_images[i] + ' to slideshow;');
+						//console.log('Adding ' + new_images[i] + ' to slideshow;');
 						$('.cycle-slideshow').cycle('add', '<img src="' + new_images[i] +'"/>' );
 					}
 					$(this).prop('disabled', true)
+					console.log(images);
 
 
 					//extra delay after adding new photos, except for the first time.
@@ -72,53 +73,93 @@ jQuery('document').ready(function($){
 			});
 			add_image_running = 0;
 			if(typeof callback !== 'undefined'){
+				//$('.cycle-slideshow').cycle('goto',(promo_count+1)); //skip promos first time
 				callback();
 			}
 		} //end add_images fn
 
 
-		//setInterval(function(){ add_images() }, 5000);
-		//setInterval(function(){ show_promo() }, 20000); //show promo every 20000 miliseconds
-/*
-
-		$('.cycle-slideshow').on('cycle-before', function(event, optionHash, outgoingSlideEl, incomingSlideEl, forwardFlag){
-			slides_shown +=1;
-			console.log(incomingSlideEl);
-			console.log('this slide= '+  optionHash.currSlide +'; slides_since_promo = ' + slides_since_promo + '; next_slide = '+next_slide);
-			if(forwardFlag){
+		$(document).on('cycle-after', function(event, optionHash, outgoingSlideEl, incomingSlideEl, forwardFlag){
+			//console.log(incomingSlideEl);
+			//console.log(forwardFlag);
+			//console.log(slides_shown +'. this slide= '+  optionHash.currSlide +'; slides_since_promo = ' + slides_since_promo + '; resume_slide_num = '+resume_slide_num);
+			//console.log(incomingSlideEl);
+			
 				add_images();
+				/*
 				if(slides_since_promo == 0) {
 			        slides_since_promo += 1;
-					//$('.cycle-slideshow').cycle('goto', next_slide+1); //show new slide
+					//event.preventDefault();
+					//$('.cycle-slideshow').cycle('goto', (1+resume_slide_num)); //show new slide
 				} else if(slides_since_promo > <?php echo $num_photos_between_promos; ?>){
-					next_slide = optionHash.currSlide;
+					resume_slide_num = optionHash.currSlide;
 					promo_num = getRandomInt(0, promo_count-1);	
 					//optionHash.nextSlide = promo_num;
-					console.log('showing promo index #'+promo_num +' of ' + promo_count +' next.');
+					console.log('showing promo index #'+(1+promo_num) +' of ' + promo_count +' next, then back to '+resume_slide_num);
 					slides_since_promo = 0;
+					event.preventDefault();
 					$('.cycle-slideshow').cycle('goto', promo_num); 
 				} else {
 			        //optionHash.nextSlide = optionHash.currSlide + val;
 			        slides_since_promo += 1;
 				}
-			}
-
+				*/
+			
+			slides_shown +=1;
 		})
-		*/
-
 		
+		$(document).on('cycle-before', function(event, optionHash, outgoingSlideEl, incomingSlideEl, forwardFlag){
+		
+		})
+		$(document).on('cycle-after', function(event, optionHash, outgoingSlideEl, incomingSlideEl, forwardFlag){
+
+			//console.log(incomingSlideEl);
+			//console.log(forwardFlag);
+			console.log(slides_shown +'. this slide= '+  optionHash.currSlide +'; slides_since_promo = ' + slides_since_promo + '; resume_slide_num = '+resume_slide_num +' '+forwardFlag);
+			
+			if(!forwardFlag){
+				slides_since_promo = 0;
+			}
+			
+				if(slides_since_promo == 0) {
+					slides_since_promo += 1;
+					event.preventDefault();
+					console.log('resuming previous picture id '+ resume_slide_num);
+					$('.cycle-slideshow').cycle('goto',1+resume_slide_num); //show new slide
+				} else if(slides_since_promo > <?php echo $num_photos_between_promos; ?> ){
+					resume_slide_num = optionHash.nextSlide;
+					promo_num = getRandomInt(0, promo_count-1);	
+					console.log('showing promo index #'+(1+promo_num) +' of ' + promo_count +' next, then back to '+resume_slide_num +' forwardFlag = '+forwardFlag);
+					event.preventDefault();
+					$('.cycle-slideshow').cycle('goto', promo_num); 
+				} else {
+					slides_since_promo +=1;
+				}
+			
+		})
+		
+
+		/*
 		$(document).on( 'cycle-bootstrap', function( e, optionHash, API ) {
-			console.log('setting up our custom bootstrap');
+			API.log('setting up our custom bootstrap');
 		    // replace "advanceSlide" method with custom impl
 		    //console.log(API);
 
 		    var origJump = API.jump;
 		    API.jump = function(n) {
-		    	console.log('api jump override called!');
+		    	if(1){
+		    		console.log('api jump override called!');
+		    	} else {
+		    		origJump.call(API,n);
+		    	}
 		    }
 
+		    var origAdvanceSlide = API.AdvanceSlide;
 		    API.advanceSlide = function( numberOfPositions ) {
-		    	console.log('custom api advancing slide');
+		    	console.log('calling api advance fn;');
+		    }
+		    API.advanceSlide2 = function( numberOfPositions ) {
+		    	API.log('custom api advancing slide');
 	    	    var optionHash = this.optionHash();
 		        clearTimeout(optionHash.timeoutId);
 		        optionHash.timeoutId = 0;
@@ -144,11 +185,12 @@ jQuery('document').ready(function($){
 		    console.log(API);
 
 		})
+		*/
 		
 			   
-		$('#slideshow').addClass('cycle-slideshow').cycle();
-		add_images('/images.php?promos=true', add_images);  //this is the initial load of images, with a callback to make it synchronous
-	
+		$('#slideshow').addClass('cycle-slideshow').cycle().animate({}, function(){
+				add_images('/images.php?promos=true', add_images);  //this is the initial load of images, with a callback to make it synchronous
+		});
 	});
 </script>
 <style>

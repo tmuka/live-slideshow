@@ -20,6 +20,7 @@ jQuery('document').ready(function($){
 		var add_image_running = 0;
 
 		function resume_show(){
+			//$('.cycle-slideshow').cycle('reinit') //delay for 10,000 miliseconds before resuming
 			$('.cycle-slideshow').cycle('resume') //delay for 10,000 miliseconds before resuming
 		}
 
@@ -70,68 +71,83 @@ jQuery('document').ready(function($){
 				}
 			});
 			add_image_running = 0;
+			if(typeof callback !== 'undefined'){
+				callback();
+			}
 		} //end add_images fn
 
 
 		//setInterval(function(){ add_images() }, 5000);
 		//setInterval(function(){ show_promo() }, 20000); //show promo every 20000 miliseconds
-
+/*
 
 		$('.cycle-slideshow').on('cycle-before', function(event, optionHash, outgoingSlideEl, incomingSlideEl, forwardFlag){
 			slides_shown +=1;
-			add_images();
+			console.log(incomingSlideEl);
 			console.log('this slide= '+  optionHash.currSlide +'; slides_since_promo = ' + slides_since_promo + '; next_slide = '+next_slide);
-			if(slides_since_promo == 0) {
-		        slides_since_promo += 1;
-				$('.cycle-slideshow').cycle('goto', next_slide+1); //show new slide
-			} else if(slides_since_promo > <?php echo $num_photos_between_promos; ?>){
-				next_slide = optionHash.currSlide;
-				promo_num = getRandomInt(0, promo_count-1);	
-				//opts.nextSlide = promo_num;
-				console.log('showing promo index #'+promo_num +' of ' + promo_count +' next.');
-				slides_since_promo = 0;
-				$('.cycle-slideshow').cycle('goto', promo_num); //show new slide
-			} else {
-		        //opts.nextSlide = opts.currSlide + val;
-		        slides_since_promo += 1;
+			if(forwardFlag){
+				add_images();
+				if(slides_since_promo == 0) {
+			        slides_since_promo += 1;
+					//$('.cycle-slideshow').cycle('goto', next_slide+1); //show new slide
+				} else if(slides_since_promo > <?php echo $num_photos_between_promos; ?>){
+					next_slide = optionHash.currSlide;
+					promo_num = getRandomInt(0, promo_count-1);	
+					//optionHash.nextSlide = promo_num;
+					console.log('showing promo index #'+promo_num +' of ' + promo_count +' next.');
+					slides_since_promo = 0;
+					$('.cycle-slideshow').cycle('goto', promo_num); 
+				} else {
+			        //optionHash.nextSlide = optionHash.currSlide + val;
+			        slides_since_promo += 1;
+				}
 			}
 
 		})
+		*/
 
-		/*
+		
 		$(document).on( 'cycle-bootstrap', function( e, optionHash, API ) {
 			console.log('setting up our custom bootstrap');
 		    // replace "advanceSlide" method with custom impl
+		    //console.log(API);
+
+		    var origJump = API.jump;
+		    API.jump = function(n) {
+		    	console.log('api jump override called!');
+		    }
+
 		    API.advanceSlide = function( numberOfPositions ) {
-		    		console.log('advancing slide');
-		    	    var opts = this.opts();
-			        clearTimeout(opts.timeoutId);
-			        opts.timeoutId = 0;
-					console.log('slides_since_promo = ' + slides_since_promo);
-					if(slides_since_promo > <?php echo $num_photos_between_promos; ?>){
-						promo_num = getRandomInt(0, promo_count-1);	
-						opts.nextSlide = promo_num;
-						console.log('showing promo index #'+promo_num +' of ' + promo_count +' next.');
-						slides_since_promo = 0;
-					} else {
-				        opts.nextSlide = opts.currSlide + val;
-				        slides_since_promo += 1;
-					}
+		    	console.log('custom api advancing slide');
+	    	    var optionHash = this.optionHash();
+		        clearTimeout(optionHash.timeoutId);
+		        optionHash.timeoutId = 0;
+				console.log('slides_since_promo = ' + slides_since_promo);
+				if(slides_since_promo > <?php echo $num_photos_between_promos; ?>){
+					promo_num = getRandomInt(0, promo_count-1);	
+					optionHash.nextSlide = promo_num;
+					console.log('showing promo index #'+promo_num +' of ' + promo_count +' next.');
+					slides_since_promo = 0;
+				} else {
+			        optionHash.nextSlide = optionHash.currSlide + val;
+			        slides_since_promo += 1;
+				}
 
-			        if (opts.nextSlide < 0)
-			            opts.nextSlide = opts.slides.length - 1;
-			        else if (opts.nextSlide >= opts.slides.length)
-			            opts.nextSlide = 0;
+		        if (optionHash.nextSlide < 0)
+		            optionHash.nextSlide = optionHash.slides.length - 1;
+		        else if (optionHash.nextSlide >= optionHash.slides.length)
+		            optionHash.nextSlide = 0;
 
-			        opts.API.prepareTx( true,  val >= 0 );
-			        return false;
-			    }
+		        optionHash.API.prepareTx( true,  val >= 0 );
+		        return false;
+		    }
+		    console.log(API);
 
-			})
-		*/
+		})
+		
 			   
-		//$('.cycle-slideshow').cycle();
-		add_images('/images.php?promos=true', add_images());  //this is the initial load of images, with a callback to make it synchronous
+		$('#slideshow').addClass('cycle-slideshow').cycle();
+		add_images('/images.php?promos=true', add_images);  //this is the initial load of images, with a callback to make it synchronous
 	
 	});
 </script>
@@ -195,11 +211,11 @@ jQuery('document').ready(function($){
  * and setInterval 5000 means 5 seconds between filesystem refreshes
  ******************************************************************************/ 
 ?>
-<div id="slideshow" class="cycle-slideshow" style="max-width: 100%; max-height: 100%;"
+<div id="slideshow" class="dis-cycle-slideshow" style="max-width: 100%; max-height: 100%;"
         data-cycle-fx="scrollVert" 
 	   	data-cycle-timeout="<?php echo ($seconds_per_slide*1000); ?>"
 		data-cycle-pager-event="mouseover"
-		data-cycle-pause-on-hover="true"
+		data-cycle-pause-on-hover="false"
 		disable-data-cycle-random="true"
 		data-cycle-reverse="false"
 		data-cycle-log="true"

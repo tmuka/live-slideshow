@@ -1,7 +1,8 @@
 <?php 
 	/************** SETTINGS ***********************/
 	$num_photos_between_promos = 3 ;
-	$seconds_per_slide = 0.5;
+	$seconds_per_slide = 5;
+	$num_seconds_to_show_new = 10;
 	$DEBUG =  false;
 
 ?>
@@ -16,8 +17,7 @@ jQuery('document').ready(function($){
 		var images = [];
 		var slides_shown = 0;
 		var promo_count = 0;
-		var resume_slide_num = 0;
-		var slides_since_promo = 1;		
+		var promo_prev = -1;
 		var add_image_running = 0;
 
 		function mylog(stuff){
@@ -68,7 +68,7 @@ jQuery('document').ready(function($){
 
 						mylog('pausing for 10s since a new photo was added');
 						$('.cycle-slideshow').cycle('pause');
-						timeoutID = window.setTimeout(resume_show, 10000); // this is the extra time delay a newly added photo is displayed
+						timeoutID = window.setTimeout(resume_show, (1000* <?php echo $num_seconds_to_show_new; ?>)); // this is the extra time delay a newly added photo is displayed
 					} 
 					if(img_list_url.search('promo') > 0){
 						promo_count = new_images.length;
@@ -101,59 +101,32 @@ jQuery('document').ready(function($){
 				//mylog('called calcNextSlide');
 				var opts = this.opts();
 				var roll;
-				//mylog('before: '+ opts.currSlide + ' -> ' + opts.nextSlide +'                    slides_since_promo = ' + slides_since_promo);
-
-				if(0 && slides_since_promo == 0) {
-					roll = (opts.nextSlide + 1) == opts.slides.length;
-					opts.nextSlide = resume_slide_num;
-					opts.currSlide = roll ? opts.slides.length-1 : opts.nextSlide-1;
-					mylog('resuming slide index '+resume_slide_num);
-					slides_since_promo = 1;
-				} else if(0 && slides_since_promo >= <?php echo $num_photos_between_promos; ?> ){
+				var roll2;
+				var i=0;
+				//origCalcNextSlide.call(API); //do the normal stuff
+				
 					roll = (opts.nextSlide + 1) == opts.slides.length;
 					opts.nextSlide = roll ? 0 : opts.nextSlide+1;
-					//opts.currSlide = roll ? opts.slides.length-1 : opts.nextSlide-1;
-					resume_slide_num = opts.nextSlide;
-					promo_num = getRandomInt(1, promo_count);	//get random promo slide zero-index num
-					promo_num = 1;
-					opts.nextSlide = promo_num;
-					slides_since_promo = 0;
-					/*
-					if(resume_slide_num <= promo_count){
-						opts.nextSlide = promo_count+1;
-						resume_slide_num = opts.nextSlide;
-					}
-					*/
-					mylog('showing promo index '+(promo_num) +' of ' + promo_count +' next, then back to '+resume_slide_num);
-				} else {
-					slides_since_promo += 1;
-					//origCalcNextSlide.call(API); //do the normal stuff
-					if ( opts.reverse ) {
-						roll = (opts.nextSlide - 1) < 0;
-						opts.nextSlide = roll ? opts.slideCount - 1 : opts.nextSlide-1;
-						opts.currSlide = roll ? 0 : opts.nextSlide+1;
-					} else {
-						roll = (opts.nextSlide + 1) == opts.slides.length;
-						opts.nextSlide = roll ? 0 : opts.nextSlide+1;
-						opts.currSlide = roll ? opts.slides.length-1 : opts.nextSlide-1;
-						
-						do
-							//opts.nextSlide = getRandomInt(promo_count, opts.slideCount -1);	//get random promo slide zero-index num
-							opts.nextSlide = getRandomInt(0, opts.slideCount -1);	//get random promo slide zero-index num
-						while(opts.nextSlide == opts.currSlide); //so we don't get stuck on the same slide
-
-						if(slides_shown <= 1 && opts.nextSlide < promo_count){
-							opts.nextSlide = promo_count;
-							mylog('skipping promos after first play');
+					opts.currSlide = roll ? opts.slides.length-1 : opts.nextSlide-1;
+					
+					do
+						if(slides_shown % <?php echo 1+$num_photos_between_promos; ?> == 0){
+							//opts.nextSlide = getRandomInt(0, promo_count-1);	//get random promo slide zero-index num
+							roll2 = (promo_prev +1) == promo_count;
+							//mylog('promo_prev = '+promo_prev+'; roll2 = '+ roll2);
+							opts.nextSlide = roll2 ? 0 : promo_prev+1;
+							promo_prev = opts.nextSlide;
+							mylog('showing promo '+ opts.nextSlide);
+						} else {
+							opts.nextSlide = getRandomInt(promo_count, opts.slideCount -1);	//get random promo slide zero-index num
+							//opts.nextSlide = getRandomInt(0, opts.slideCount -1);	//get random promo slide zero-index num
 						}
-					}	
-				}
+					while(opts.nextSlide == opts.currSlide && i++ < 10); //so we don't get stuck on the same slide
 
-				mylog(slides_shown +'. after : '+ (1+opts.currSlide) + ' -> ' + (1+opts.nextSlide) +'                    slides_since_promo = ' + slides_since_promo);
+				mylog(slides_shown +'. after : '+ (1+opts.currSlide) + ' -> ' + (1+opts.nextSlide));
 
 			}
 		})
-		
   
 		$('#slideshow').addClass('cycle-slideshow').cycle().animate({},2000, function(){
 				add_images('/images.php?promos=true', add_images);  //this is the initial load of images, with a callback to make it synchronous

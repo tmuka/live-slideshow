@@ -1,7 +1,8 @@
 <?php 
 	/************** SETTINGS ***********************/
-	$num_photos_between_promos = 2;
-	$seconds_per_slide = 3;
+	$num_photos_between_promos = 3 ;
+	$seconds_per_slide = 0.5;
+	$DEBUG =  false;
 
 ?>
 <html>
@@ -18,6 +19,12 @@ jQuery('document').ready(function($){
 		var resume_slide_num = 0;
 		var slides_since_promo = 1;		
 		var add_image_running = 0;
+
+		function mylog(stuff){
+			<?php if($DEBUG){ 
+				echo 'console.log(stuff);';
+			} ?>
+		}
 
 		function resume_show(){
 			//$('.cycle-slideshow').cycle('reinit') //delay for 10,000 miliseconds before resuming
@@ -39,36 +46,34 @@ jQuery('document').ready(function($){
 			$.get(img_list_url, function(data){
 				all_images = data.split(',');
 				var new_images = $(all_images).not(images).get();	
-				//console.log("all images, old list, diff ")
-				//console.log(all_images);
-				//console.log(images);
-				//console.log(new_images);
+				//mylog("all images, old list, diff ")
+				//mylog(all_images);
+				//mylog(images);
+				//mylog(new_images);
 				if(new_images.length > 0){
 					images = images.concat(new_images);
 					for (var i=0; i < new_images.length; i++) {
-						//console.log('Adding ' + new_images[i] + ' to slideshow;');
+						//mylog('Adding ' + new_images[i] + ' to slideshow;');
 						$('.cycle-slideshow').cycle('add', '<img src="' + new_images[i] +'"/>' );
 					}
 					$(this).prop('disabled', true)
-					console.log(images);
+					mylog(images);
 
 
 					//extra delay after adding new photos, except for the first time.
 					if(slides_shown > 1){
-						//console.log(images);
-						//console.log('going to slide'+ images.length -1);
+						//mylog(images);
+						//mylog('going to slide'+ images.length -1);
 						$('.cycle-slideshow').cycle('goto', images.length-1); //show new slide
 
-						console.log('pausing for 10s since a new photo was added');
+						mylog('pausing for 10s since a new photo was added');
 						$('.cycle-slideshow').cycle('pause');
 						timeoutID = window.setTimeout(resume_show, 10000); // this is the extra time delay a newly added photo is displayed
 					} 
 					if(img_list_url.search('promo') > 0){
 						promo_count = new_images.length;
-						console.log('promo_count = ' + promo_count);
-
+						mylog('promo_count = ' + promo_count);
 					}
-
 				}
 			});
 			add_image_running = 0;
@@ -80,62 +85,73 @@ jQuery('document').ready(function($){
 
 
 		$(document).on('cycle-after', function(event, optionHash, outgoingSlideEl, incomingSlideEl, forwardFlag){
-			//console.log(incomingSlideEl);
-			//console.log(forwardFlag);
-			//console.log(slides_shown +'. this slide= '+  optionHash.currSlide +'; slides_since_promo = ' + slides_since_promo + '; resume_slide_num = '+resume_slide_num);
-			//console.log(incomingSlideEl);
-			
-				add_images();
-				/*
-				if(slides_since_promo == 0) {
-			        slides_since_promo += 1;
-					//event.preventDefault();
-					//$('.cycle-slideshow').cycle('goto', (1+resume_slide_num)); //show new slide
-				} else if(slides_since_promo > <?php echo $num_photos_between_promos; ?>){
-					resume_slide_num = optionHash.currSlide;
-					promo_num = getRandomInt(0, promo_count-1);	
-					//optionHash.nextSlide = promo_num;
-					console.log('showing promo index #'+(1+promo_num) +' of ' + promo_count +' next, then back to '+resume_slide_num);
-					slides_since_promo = 0;
-					event.preventDefault();
-					$('.cycle-slideshow').cycle('goto', promo_num); 
-				} else {
-			        //optionHash.nextSlide = optionHash.currSlide + val;
-			        slides_since_promo += 1;
-				}
-				*/
-			
-			slides_shown +=1;
+			add_images();
+			slides_shown +=1;			
 		})
 		
 		$(document).on('cycle-before', function(event, optionHash, outgoingSlideEl, incomingSlideEl, forwardFlag){
-			console.log(slides_shown +'. this slide= '+  optionHash.currSlide +'; slides_since_promo = ' + slides_since_promo + '; resume_slide_num = '+resume_slide_num +' '+forwardFlag);
+			//mylog(incomingSlideEl);
 		})
-		$(document).on('cycle-after', function(event, optionHash, outgoingSlideEl, incomingSlideEl, forwardFlag){
+	
+		$(document).on( 'cycle-bootstrap', function( e, optionHash, API ) {
+			API.log('setting up our custom bootstrap');
 
-			//console.log(incomingSlideEl);
-			//console.log(forwardFlag);
-			
-			
-			if(!forwardFlag){
-				slides_since_promo = 0;
-			}
-			
-				if(slides_since_promo == 0) {
-					slides_since_promo += 1;
-					event.preventDefault();
-					console.log('resuming previous picture id '+ resume_slide_num);
-					$('.cycle-slideshow').cycle('goto',1+resume_slide_num); //show new slide
-				} else if(slides_since_promo > <?php echo $num_photos_between_promos; ?> ){
-					resume_slide_num = optionHash.nextSlide;
-					promo_num = getRandomInt(0, promo_count-1);	
-					console.log('showing promo index #'+(1+promo_num) +' of ' + promo_count +' next, then back to '+resume_slide_num +' forwardFlag = '+forwardFlag);
-					event.preventDefault();
-					$('.cycle-slideshow').cycle('goto', promo_num); 
+			var origCalcNextSlide = API.calcNextSlide;
+			API.calcNextSlide = function(){
+				//mylog('called calcNextSlide');
+				var opts = this.opts();
+				var roll;
+				//mylog('before: '+ opts.currSlide + ' -> ' + opts.nextSlide +'                    slides_since_promo = ' + slides_since_promo);
+
+				if(0 && slides_since_promo == 0) {
+					roll = (opts.nextSlide + 1) == opts.slides.length;
+					opts.nextSlide = resume_slide_num;
+					opts.currSlide = roll ? opts.slides.length-1 : opts.nextSlide-1;
+					mylog('resuming slide index '+resume_slide_num);
+					slides_since_promo = 1;
+				} else if(0 && slides_since_promo >= <?php echo $num_photos_between_promos; ?> ){
+					roll = (opts.nextSlide + 1) == opts.slides.length;
+					opts.nextSlide = roll ? 0 : opts.nextSlide+1;
+					//opts.currSlide = roll ? opts.slides.length-1 : opts.nextSlide-1;
+					resume_slide_num = opts.nextSlide;
+					promo_num = getRandomInt(1, promo_count);	//get random promo slide zero-index num
+					promo_num = 1;
+					opts.nextSlide = promo_num;
+					slides_since_promo = 0;
+					/*
+					if(resume_slide_num <= promo_count){
+						opts.nextSlide = promo_count+1;
+						resume_slide_num = opts.nextSlide;
+					}
+					*/
+					mylog('showing promo index '+(promo_num) +' of ' + promo_count +' next, then back to '+resume_slide_num);
 				} else {
-					slides_since_promo +=1;
+					slides_since_promo += 1;
+					//origCalcNextSlide.call(API); //do the normal stuff
+					if ( opts.reverse ) {
+						roll = (opts.nextSlide - 1) < 0;
+						opts.nextSlide = roll ? opts.slideCount - 1 : opts.nextSlide-1;
+						opts.currSlide = roll ? 0 : opts.nextSlide+1;
+					} else {
+						roll = (opts.nextSlide + 1) == opts.slides.length;
+						opts.nextSlide = roll ? 0 : opts.nextSlide+1;
+						opts.currSlide = roll ? opts.slides.length-1 : opts.nextSlide-1;
+						
+						do
+							//opts.nextSlide = getRandomInt(promo_count, opts.slideCount -1);	//get random promo slide zero-index num
+							opts.nextSlide = getRandomInt(0, opts.slideCount -1);	//get random promo slide zero-index num
+						while(opts.nextSlide == opts.currSlide); //so we don't get stuck on the same slide
+
+						if(slides_shown <= 1 && opts.nextSlide < promo_count){
+							opts.nextSlide = promo_count;
+							mylog('skipping promos after first play');
+						}
+					}	
 				}
-			
+
+				mylog(slides_shown +'. after : '+ (1+opts.currSlide) + ' -> ' + (1+opts.nextSlide) +'                    slides_since_promo = ' + slides_since_promo);
+
+			}
 		})
 		
 
@@ -143,12 +159,12 @@ jQuery('document').ready(function($){
 		$(document).on( 'cycle-bootstrap', function( e, optionHash, API ) {
 			API.log('setting up our custom bootstrap');
 		    // replace "advanceSlide" method with custom impl
-		    //console.log(API);
+		    //mylog(API);
 
 		    var origJump = API.jump;
 		    API.jump = function(n) {
 		    	if(1){
-		    		console.log('api jump override called!');
+		    		mylog('api jump override called!');
 		    	} else {
 		    		origJump.call(API,n);
 		    	}
@@ -156,18 +172,18 @@ jQuery('document').ready(function($){
 
 		    var origAdvanceSlide = API.AdvanceSlide;
 		    API.advanceSlide = function( numberOfPositions ) {
-		    	console.log('calling api advance fn;');
+		    	mylog('calling api advance fn;');
 		    }
 		    API.advanceSlide2 = function( numberOfPositions ) {
 		    	API.log('custom api advancing slide');
 	    	    var optionHash = this.optionHash();
 		        clearTimeout(optionHash.timeoutId);
 		        optionHash.timeoutId = 0;
-				console.log('slides_since_promo = ' + slides_since_promo);
+				mylog('slides_since_promo = ' + slides_since_promo);
 				if(slides_since_promo > <?php echo $num_photos_between_promos; ?>){
 					promo_num = getRandomInt(0, promo_count-1);	
 					optionHash.nextSlide = promo_num;
-					console.log('showing promo index #'+promo_num +' of ' + promo_count +' next.');
+					mylog('showing promo index #'+promo_num +' of ' + promo_count +' next.');
 					slides_since_promo = 0;
 				} else {
 			        optionHash.nextSlide = optionHash.currSlide + val;
@@ -182,13 +198,13 @@ jQuery('document').ready(function($){
 		        optionHash.API.prepareTx( true,  val >= 0 );
 		        return false;
 		    }
-		    console.log(API);
+		    mylog(API);
 
 		})
 		*/
 		
 			   
-		$('#slideshow').addClass('cycle-slideshow').cycle().animate({}, function(){
+		$('#slideshow').addClass('cycle-slideshow').cycle().animate({},2000, function(){
 				add_images('/images.php?promos=true', add_images);  //this is the initial load of images, with a callback to make it synchronous
 		});
 
@@ -213,15 +229,21 @@ jQuery('document').ready(function($){
 		display: block; z-index: 89999; z-index: 500; position: absolute; bottom: 0px; right:0px; width: 24%; overflow: hidden;
 	}
 	.cycle-pager span { 
-	    font-family: arial; font-size: 50px; width: 19%; height: 16px; 
-		display: block; float:left; color: #333; cursor: pointer; 
+	    font-family: arial; font-size: 15px; width: 18%; height: 16px; 
+		display: block; float:left; color: #eee; cursor: pointer; 
 		     background-color: #333;
 			border-radius: 4px;
 			margin: 0 0 1% 1%;
-			text-indent: 100%;
+			text-indent: 100%; 
+			opacity: 0.3;
+			text-align: center;
 			overflow: hidden;
 			white-space: nowrap;
-			opacity: 0.3;
+			
+	}
+	.debug .cycle-pager span { 
+		text-indent: 0;
+		opacity: 1;
 	}
 	.cycle-pager span.cycle-pager-active {background-color: red; color: #D69746;}
 	.cycle-pager > * { cursor: pointer;}
@@ -252,7 +274,7 @@ jQuery('document').ready(function($){
 
 </style>
 </head>
-<body>
+<body class="<?php if($DEBUG){ echo debug; }?>">
 
 <?php 
 /*****************************************************************************
@@ -268,8 +290,9 @@ jQuery('document').ready(function($){
 		data-cycle-pause-on-hover="false"
 		disable-data-cycle-random="true"
 		data-cycle-reverse="false"
-		data-cycle-log="true"
+		data-cycle-log="<?php echo $DEBUG; ?>"
 		disable-data-cycle-loader="true"
+		data-cycle-pager-template="<span>{{slideNum}}</span>"
     >
     <div class="cycle-pager"></div>
 </div>

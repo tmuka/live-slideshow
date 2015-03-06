@@ -1,7 +1,7 @@
 <?php 
 	/************** SETTINGS ***********************/
 	$num_photos_between_promos = 3 ;
-	$seconds_per_slide = 5;
+	$seconds_per_slide = 3;
 	$num_seconds_to_show_new = 10;
 	$DEBUG =  false;
 
@@ -18,6 +18,7 @@ jQuery('document').ready(function($){
 		var slides_shown = 0;
 		var promo_count = 0;
 		var promo_prev = -1;
+		var promos;
 		var add_image_running = 0;
 
 		function mylog(stuff){
@@ -72,20 +73,23 @@ jQuery('document').ready(function($){
 					} 
 					if(img_list_url.search('promo') > 0){
 						promo_count = new_images.length;
+						promos = new_images;
 						mylog('promo_count = ' + promo_count);
 					}
 				}
+				add_image_running = 0;
+				if(typeof callback !== 'undefined'){
+					//$('.cycle-slideshow').cycle('goto',(promo_count+1)); //skip promos first time
+					callback();
+				}
 			});
-			add_image_running = 0;
-			if(typeof callback !== 'undefined'){
-				//$('.cycle-slideshow').cycle('goto',(promo_count+1)); //skip promos first time
-				callback();
-			}
 		} //end add_images fn
 
 
 		$(document).on('cycle-after', function(event, optionHash, outgoingSlideEl, incomingSlideEl, forwardFlag){
-			add_images();
+			if(promo_count > 0){
+				add_images();
+			}
 			slides_shown +=1;			
 		})
 		
@@ -96,8 +100,7 @@ jQuery('document').ready(function($){
 		$(document).on( 'cycle-bootstrap', function( e, optionHash, API ) {
 			API.log('setting up our custom bootstrap');
 
-			var origCalcNextSlide = API.calcNextSlide;
-			API.calcNextSlide = function(){
+			var origCalcNextSlide = API.calcNextSlide; API.calcNextSlide = function(){
 				//mylog('called calcNextSlide');
 				var opts = this.opts();
 				var roll;
@@ -129,7 +132,7 @@ jQuery('document').ready(function($){
 		})
   
 		$('#slideshow').addClass('cycle-slideshow').cycle().animate({},2000, function(){
-				add_images('/images.php?promos=true', add_images);  //this is the initial load of images, with a callback to make it synchronous
+			add_images('/images.php?promos=true', add_images);  //this is the initial load of images, with a callback to make it synchronous
 		});
 
 		$('h1').click(function(){
@@ -215,7 +218,7 @@ jQuery('document').ready(function($){
 		disable-data-cycle-random="true"
 		data-cycle-reverse="false"
 		data-cycle-log="<?php echo $DEBUG; ?>"
-		disable-data-cycle-loader="true"
+		data-cycle-loader="true"
 		data-cycle-pager-template="<span>{{slideNum}}</span>"
     >
     <div class="cycle-pager"></div>

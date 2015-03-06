@@ -103,6 +103,7 @@ jQuery('document').ready(function($){
 			var origCalcNextSlide = API.calcNextSlide; API.calcNextSlide = function(){
 				//mylog('called calcNextSlide');
 				var opts = this.opts();
+				if(typeof opts === 'undefined') return; //cover case when no images exist yet in slideshow
 				var roll;
 				var roll2;
 				var i=0;
@@ -113,7 +114,7 @@ jQuery('document').ready(function($){
 					opts.currSlide = roll ? opts.slides.length-1 : opts.nextSlide-1;
 					
 					do
-						if(slides_shown % <?php echo 1+$num_photos_between_promos; ?> == 0){
+						if(slides_shown % <?php echo 1+$num_photos_between_promos; ?> == 0 || opts.slides.length <= promo_count){
 							//opts.nextSlide = getRandomInt(0, promo_count-1);	//get random promo slide zero-index num
 							roll2 = (promo_prev +1) == promo_count;
 							//mylog('promo_prev = '+promo_prev+'; roll2 = '+ roll2);
@@ -124,7 +125,7 @@ jQuery('document').ready(function($){
 							opts.nextSlide = getRandomInt(promo_count, opts.slideCount -1);	//get random promo slide zero-index num
 							//opts.nextSlide = getRandomInt(0, opts.slideCount -1);	//get random promo slide zero-index num
 						}
-					while(opts.nextSlide == opts.currSlide && i++ < 10); //so we don't get stuck on the same slide
+					while(opts.nextSlide == opts.currSlide && opts.slides.length - promo_count > 1 && i++ < 10); //so we don't get stuck on the same slide
 
 				mylog(slides_shown +'. after : '+ (1+opts.currSlide) + ' -> ' + (1+opts.nextSlide));
 
@@ -218,7 +219,7 @@ jQuery('document').ready(function($){
 		disable-data-cycle-random="true"
 		data-cycle-reverse="false"
 		data-cycle-log="<?php echo $DEBUG; ?>"
-		data-cycle-loader="true"
+		disable-data-cycle-loader="true"
 		data-cycle-pager-template="<span>{{slideNum}}</span>"
     >
     <div class="cycle-pager"></div>

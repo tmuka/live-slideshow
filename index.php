@@ -17,6 +17,7 @@ jQuery('document').ready(function($){
 		var images = [];
 		var slides_shown = 0;
 		var promo_count = 0;
+		var slides_count = 0;
 		var promo_prev = -1;
 		var promos;
 		var add_image_running = 0;
@@ -87,14 +88,14 @@ jQuery('document').ready(function($){
 
 
 		$(document).on('cycle-after', function(event, optionHash, outgoingSlideEl, incomingSlideEl, forwardFlag){
-			if(promo_count > 0){
-				add_images();
-			}
 			slides_shown +=1;			
 		})
 		
 		$(document).on('cycle-before', function(event, optionHash, outgoingSlideEl, incomingSlideEl, forwardFlag){
 			//mylog(incomingSlideEl);
+			if(promo_count > 0){
+				add_images();
+			}
 		})
 	
 		$(document).on( 'cycle-bootstrap', function( e, optionHash, API ) {
@@ -107,6 +108,7 @@ jQuery('document').ready(function($){
 				var roll;
 				var roll2;
 				var i=0;
+
 				//origCalcNextSlide.call(API); //do the normal stuff
 				
 					roll = (opts.nextSlide + 1) == opts.slides.length;
@@ -126,6 +128,8 @@ jQuery('document').ready(function($){
 							//opts.nextSlide = getRandomInt(0, opts.slideCount -1);	//get random promo slide zero-index num
 						}
 					while(opts.nextSlide == opts.currSlide && opts.slides.length - promo_count > 1 && i++ < 10); //so we don't get stuck on the same slide
+
+				slides_count =  opts.slides.length;
 
 				mylog(slides_shown +'. after : '+ (1+opts.currSlide) + ' -> ' + (1+opts.nextSlide));
 

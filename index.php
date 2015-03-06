@@ -154,56 +154,7 @@ jQuery('document').ready(function($){
 			}
 		})
 		
-
-		/*
-		$(document).on( 'cycle-bootstrap', function( e, optionHash, API ) {
-			API.log('setting up our custom bootstrap');
-		    // replace "advanceSlide" method with custom impl
-		    //mylog(API);
-
-		    var origJump = API.jump;
-		    API.jump = function(n) {
-		    	if(1){
-		    		mylog('api jump override called!');
-		    	} else {
-		    		origJump.call(API,n);
-		    	}
-		    }
-
-		    var origAdvanceSlide = API.AdvanceSlide;
-		    API.advanceSlide = function( numberOfPositions ) {
-		    	mylog('calling api advance fn;');
-		    }
-		    API.advanceSlide2 = function( numberOfPositions ) {
-		    	API.log('custom api advancing slide');
-	    	    var optionHash = this.optionHash();
-		        clearTimeout(optionHash.timeoutId);
-		        optionHash.timeoutId = 0;
-				mylog('slides_since_promo = ' + slides_since_promo);
-				if(slides_since_promo > <?php echo $num_photos_between_promos; ?>){
-					promo_num = getRandomInt(0, promo_count-1);	
-					optionHash.nextSlide = promo_num;
-					mylog('showing promo index #'+promo_num +' of ' + promo_count +' next.');
-					slides_since_promo = 0;
-				} else {
-			        optionHash.nextSlide = optionHash.currSlide + val;
-			        slides_since_promo += 1;
-				}
-
-		        if (optionHash.nextSlide < 0)
-		            optionHash.nextSlide = optionHash.slides.length - 1;
-		        else if (optionHash.nextSlide >= optionHash.slides.length)
-		            optionHash.nextSlide = 0;
-
-		        optionHash.API.prepareTx( true,  val >= 0 );
-		        return false;
-		    }
-		    mylog(API);
-
-		})
-		*/
-		
-			   
+  
 		$('#slideshow').addClass('cycle-slideshow').cycle().animate({},2000, function(){
 				add_images('/images.php?promos=true', add_images);  //this is the initial load of images, with a callback to make it synchronous
 		});
